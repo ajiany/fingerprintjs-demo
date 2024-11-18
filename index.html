@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备指纹演示</title>
+    <!-- 改用 npm 下载的本地文件或使用其他可访问的 CDN -->
+    <script src="https://unpkg.com/@fingerprintjs/fingerprintjs@3/dist/fp.js"></script>
+    <!-- 如果上面的 CDN 仍然无法访问，可以尝试以下备用 CDN -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/2.1.0/fingerprint2.min.js"></script> -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .components {
+            margin-top: 20px;
+        }
+        .component-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>设备指纹演示</h1>
+    <h2>设备唯一标识符：</h2>
+    <div id="fingerprint" class="result">正在生成...</div>
+    
+    <h2>用于生成指纹的组件信息：</h2>
+    <div id="components" class="components">正在加载...</div>
+
+    <script>
+        // 添加加载状态提示
+        function updateStatus(message) {
+            document.getElementById('fingerprint').textContent = message;
+        }
+
+        async function initFingerprint() {
+            try {
+                updateStatus('正在初始化...');
+                
+                // 确保 FingerprintJS 已经加载
+                if (typeof FingerprintJS === 'undefined') {
+                    throw new Error('FingerprintJS 未能正确加载');
+                }
+
+                // 初始化 FingerprintJS
+                const fp = await FingerprintJS.load();
+                
+                updateStatus('正在生成指纹...');
+                
+                // 获取访客标识符
+                const result = await fp.get();
+                
+                // 显示指纹ID
+                document.getElementById('fingerprint').textContent = result.visitorId;
+                
+                // 显示组件信息
+                const componentsDiv = document.getElementById('components');
+                componentsDiv.innerHTML = '';
+                
+                // 遍历并显示所有用于生成指纹的组件
+                Object.entries(result.components).forEach(([key, value]) => {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component-item';
+                    componentDiv.innerHTML = `
+                        <strong>${key}:</strong> 
+                        <span>${JSON.stringify(value)}</span>
+                    `;
+                    componentsDiv.appendChild(componentDiv);
+                });
+            } catch (error) {
+                updateStatus(`错误: ${error.message}`);
+                console.error('指纹生成失败:', error);
+            }
+        }
+
+        // 添加页面加载完成的处理
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFingerprint);
+        } else {
+            initFingerprint();
+        }
+    </script>
+</body>
+</html> 
